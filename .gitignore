@@ -32,3 +32,5 @@ Session.vim
 
 # Python
 .pyo
+
+.idea/*
