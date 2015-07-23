@@ -10,3 +10,6 @@ Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                      '  %s <pilot reference>' % Script.scriptName ] ) )
 
 Script.parseCommandLine( ignoreErrors = True )
+
+if __name__ == "main":
+  print "The code goes here"
