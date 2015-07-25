@@ -1,15 +1,21 @@
 ############################################################
 #
-# dirac-mount command to mount DIRAC FS
+# dirac-mount command to mount FUSE based DIRAC FS
 #
 ############################################################
 
-from DIRAC.Core.Base import Script
-Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
-                                     'Usage:',
-                                     '  %s <pilot reference>' % Script.scriptName ] ) )
-
-Script.parseCommandLine( ignoreErrors = True )
+import os
 
 if __name__ == "main":
-  print "The code goes here"
+  from DIRAC.Core.Base import Script
+  Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
+                                     'Usage:',
+                                     '  %s [MountPoint]' % Script.scriptName,
+                                     'Arguments:',
+                                     '  MountPoint:     path to an exist mount directory',
+                                     '', 
+                                     'Examples:',
+                                     '  $ dirac-mount /tmp/diracfs', 
+                                     ] ) )
+
+  Script.parseCommandLine( ignoreErrors = True )
