@@ -15,14 +15,13 @@ This simple file system is based on fuse, origine for private usage.
 ```
   mkdir /tmp/dfs 
   dirac-mount.py /tmp/dfs
+  dirac-mount.py /tmp/dfs --se=IN2P3-disk  ===> use IN2P3-disk instead of DIRAC-USER
+  dirac-mount.py -d /tmp/dfs               ===> turn fuse to debug mode
 ```
 * umount
 ```
   fusermount -u /tmp/dfs
 ```
-
-### limitation
-*  access DIRAC-USER as default SE
 
 ### Commands available :  
 ```
