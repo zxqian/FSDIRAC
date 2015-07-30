@@ -6,9 +6,9 @@ This simple file system is based on fuse, origine for private usage.
 *  python : 2.6, 2.7
 *  fuse installed : install python fuse (linux fuse.py; mac OSXFUSE & fuse.py) manually
 
-### To allow user to mount diracfs, two different methods can be used :
-*  root adds user to fuse group
-*  root does 'chmod +x /bin/fusermount'
+### To allow user to mount diracfs, two different methods can be used (both needs administration privilege):
+*  add user to fuse group
+*  do 'chmod o+x /bin/fusermount'
 
 ### User mount/umount diracfs :
 * mount (ex. mount to /tmp/dfs)
@@ -23,7 +23,7 @@ This simple file system is based on fuse, origine for private usage.
   fusermount -u /tmp/dfs
 ```
 
-### Commands available :  
+### Commands (tested) available :  
 ```
   mkdir [-p]  
   rmdir  
@@ -33,7 +33,6 @@ This simple file system is based on fuse, origine for private usage.
   cat  
   less  
   more  
-  tail  
   echo >  >>  
   du [-sh]  
   find -name -print 
