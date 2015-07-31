@@ -40,33 +40,38 @@ Script.registerSwitch( "T:", "tmpdir=", "Directory to hold the local cache", set
 
 Script.parseCommandLine( ignoreErrors = True )
 
-args = Script.getPositionalArgs()
-if len( args ):
-  arg = args[ 0 ]
-  aarg = os.path.abspath( arg )
-  if os.path.isdir(aarg):
-    if os.listdir(aarg):
-      print  "["+arg+"]"+" is not empty"
-      Script.showHelp()
-      DIRAC.exit( 0 )
-  else:
-    print "["+arg+"]"+" is not a valid directory"
-    Script.showHelp()
-    DIRAC.exit( 0 )
-else:
-  print "no mount point"
-  Script.showHelp()
-  DIRAC.exit( 0 )
-
 @atexit.register
 def goodbye():
   #os.rmdir(        tmpDir)
   import shutil
   shutil.rmtree( tmpDir )
 
+usage = """
+dirac-mount -T <cache_directory> <mount_point>
+"""
+
 if __name__ == "main":
 
     from FSDIRAC.DataManagementSystem.private.DiracFS import DiracFS
+    from DIRAC import exit as DIRACexit
+
+    args = Script.getPositionalArgs()
+    if len( args ):
+      arg = args[ 0 ]
+      aarg = os.path.abspath( arg )
+      if os.path.isdir(aarg):
+        if os.listdir(aarg):
+          print  "["+arg+"]"+" is not empty"
+          Script.showHelp()
+          DIRACexit( 0 )
+      else:
+        print "["+arg+"]"+" is not a valid directory"
+        Script.showHelp()
+        DIRACexit( 0 )
+    else:
+      print "no mount point"
+      Script.showHelp()
+      DIRACexit( 0 )
 
     if not os.path.isdir( tmpDir ):
         os.makedirs( tmpDir )
@@ -81,7 +86,7 @@ if __name__ == "main":
                                metavar = "Storage Element ID",
                                default = "DIRAC-USER",
                                help = "specify the used storage element [default: %default]")
-    diracFS.parse( values = server, errex = 1 )
+    diracFS.parse( values = diracFS, errex = 1 )
     diracFS.main()
 
 
