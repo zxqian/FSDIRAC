@@ -4,7 +4,24 @@
 dirac-mount command to mount DIRAC FS
 """
 
+import os
+import atexit
+
 from DIRAC.Core.Base import Script
+from DIRAC import S_OK
+
+defaultSE = "DIRAC-USER"
+def setDefaultSE( value ):
+  global defaultSE
+  defaultSE = value
+  return S_OK()
+
+tmpDir = "/tmp/diracfs_"+os.environ['LOGNAME']
+def setTmpDir( value ):
+  global tmpDir
+  tmpDir = value
+  return S_OK()
+
 
 Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                      'Usage:',
@@ -18,10 +35,11 @@ Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                      ] )
                         )
 
-Script.registerSwitch( "se", "se=", "Set SE disk" )
+Script.registerSwitch( "S:", "se=", "Default Storage Element", setDefaultSE )
+Script.registerSwitch( "T:", "tmpdir=", "Directory to hold the local cache", setTmpDir )
+
 Script.parseCommandLine( ignoreErrors = True )
 
-import os
 args = Script.getPositionalArgs()
 if len( args ):
   arg = args[ 0 ]
@@ -40,20 +58,30 @@ else:
   Script.showHelp()
   DIRAC.exit( 0 )
 
-# call DiracFS.py
+@atexit.register
+def goodbye():
+  #os.rmdir(        tmpDir)
+  import shutil
+  shutil.rmtree( tmpDir )
 
-import sys
-newarg = []
-for a in sys.argv:
-  if not a.find("--se"):
-    ss = a.split("=")
-    newarg.append("-o SE="+ss[1])
-  else:
-    newarg.append(a)
+if __name__ == "main":
 
-newcmd = "DiracFS.py"
-for index, item in enumerate(newarg):
-  if not index==0:
-    newcmd += " "
-    newcmd += item
-os.system(newcmd)
+    from FSDIRAC.DataManagementSystem.private.DiracFS import DiracFS
+
+    if not os.path.isdir( tmpDir ):
+        os.makedirs( tmpDir )
+
+    diracFS = DiracFS( defaultSE = defaultSE,
+                       tmpDir = tmpDir,
+                       version = "%prog " + fuse.__version__,
+                       usage = usage,
+                       dash_s_do = 'setsingle' )
+
+    diracFS.parser.add_option( mountopt = "SE",
+                               metavar = "Storage Element ID",
+                               default = "DIRAC-USER",
+                               help = "specify the used storage element [default: %default]")
+    diracFS.parse( values = server, errex = 1 )
+    diracFS.main()
+
+
