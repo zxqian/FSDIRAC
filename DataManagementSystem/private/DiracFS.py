@@ -23,17 +23,13 @@
 # Xiabo Li <li.xiabo@gmail.com>
 ########################################################################
   
-import stat, time, random, errno, os, fuse, atexit
-from DIRAC.Core.Base import Script
-Script.initialize()
-
-        tmpDir = "/tmp/diracfs_"+os.environ['LOGNAME']
+import stat, time, random, errno, os, fuse
   
 class DiracFS(fuse.Fuse):
     def __init__(self, *args, **kw):
         fuse.fuse_python_api = (0, 2)
         fuse.Fuse.__init__(self, *args, **kw)
-        self.        tmpDir = kw.get( "tmpDir" )
+        self.tmpDir = kw.get( "tmpDir" )
         self.SE = kw.get( "defaultSE" )
         self.file = {}
         self.result = {}
@@ -64,13 +60,13 @@ class DiracFS(fuse.Fuse):
             md = self.result['Value']['Successful'][p]['Files'][path]['MetaData']
             st.st_mode = (stat.S_IFREG | md['Mode'])
             st.st_ino = 0
-                  st.st_dev = 0
-                  st.st_nlink = 1
-                  st.st_uid = os.getuid() if md['Owner']==self.proxy['Value']['username'] else 65534
-                  st.st_gid = os.getgid() if md['OwnerGroup']==self.proxy['Value']['group'] else 65534
-                  st.st_size = md['Size']
-                  st.st_atime = time.mktime(md['ModificationDate'].timetuple())
-                  st.st_mtime = time.mktime(md['ModificationDate'].timetuple())
+            st.st_dev = 0
+            st.st_nlink = 1
+            st.st_uid = os.getuid() if md['Owner']==self.proxy['Value']['username'] else 65534
+            st.st_gid = os.getgid() if md['OwnerGroup']==self.proxy['Value']['group'] else 65534
+            st.st_size = md['Size']
+            st.st_atime = time.mktime(md['ModificationDate'].timetuple())
+            st.st_mtime = time.mktime(md['ModificationDate'].timetuple())
             st.st_ctime = time.mktime(md['CreationDate'].timetuple())
         elif self.result["OK"] and (self.result['Value']['Successful'][p]['SubDirs'].get('/'+path) or self.result['Value']['Successful'][p]['SubDirs'].get(path)):
             #md = self.result['Value']['Successful'][p]['SubDirs']['/'+path] if p=='/' else self.result['Value']['Successful'][p]['SubDirs'][path]
@@ -78,13 +74,13 @@ class DiracFS(fuse.Fuse):
             md = self.result['Value']['Successful'][p]['SubDirs'][path]
             st.st_mode = (stat.S_IFDIR | md['Mode'])
             st.st_ino = 0
-                  st.st_dev = 0
-                  st.st_nlink = 2
-                  st.st_uid = os.getuid() if md['Owner']==self.proxy['Value']['username'] else 65534
-                  st.st_gid = os.getgid() if md['OwnerGroup']==self.proxy['Value']['group'] else 65534
-                  st.st_size = 4096
-                  st.st_atime = time.mktime(md['ModificationDate'].timetuple())
-                  st.st_mtime = time.mktime(md['ModificationDate'].timetuple())
+            st.st_dev = 0
+            st.st_nlink = 2
+            st.st_uid = os.getuid() if md['Owner']==self.proxy['Value']['username'] else 65534
+            st.st_gid = os.getgid() if md['OwnerGroup']==self.proxy['Value']['group'] else 65534
+            st.st_size = 4096
+            st.st_atime = time.mktime(md['ModificationDate'].timetuple())
+            st.st_mtime = time.mktime(md['ModificationDate'].timetuple())
             st.st_ctime = time.mktime(md['CreationDate'].timetuple())
         else :
             return -errno.ENOENT
@@ -278,29 +274,3 @@ class DiracFS(fuse.Fuse):
         self.file[path]["handler"].write(buf)
         self.file[path]["modified"] = True
         return len(buf)
-
-    #def access(self, path, mode):
-    #    if not os.access(path, mode):
-    #        return -errno.EACCES
-
-def main():
-    usage="""
-        DiracFS: A filesystem to allow viewing dirac cloud filesystem.
-    """ + fuse.Fuse.fusage
-    if not os.path.isdir(        tmpDir):
-        os.makedirs(        tmpDir)
-    server = DiracFS(version="%prog " + fuse.__version__,
-                    usage=usage, dash_s_do='setsingle')
-    server.parser.add_option(mountopt="SE", metavar="Storage Element ID", default="DIRAC-USER", help="specify the used storage element [default: %default]")
-    server.parse(values = server,errex=1)
-#    server.parse(errex=1)
-    server.main()
-
-if __name__ == '__main__':
-    main()
-
-@atexit.register
-def goodbye():
-  #os.rmdir(        tmpDir)
-  import shutil
-  shutil.rmtree(        tmpDir)

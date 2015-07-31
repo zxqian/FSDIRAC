@@ -16,7 +16,7 @@ def setDefaultSE( value ):
   defaultSE = value
   return S_OK()
 
-tmpDir = "/tmp/diracfs_"+os.environ['LOGNAME']
+tmpDir = os.path.expandvars( '$HOME/.diracfs' )
 def setTmpDir( value ):
   global tmpDir
   tmpDir = value
