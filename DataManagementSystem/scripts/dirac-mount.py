@@ -13,6 +13,8 @@ Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                      '  MountPoint:     path to an exist mount directory',
                                      '', 'Examples:',
                                      '  $ dirac-mount /tmp/diracfs',
+                                     '', 'More help:',
+                                     '  https://github.com/DIRACGrid/FSDIRAC/blob/master/README.md',
                                      ] )
                         )
 
