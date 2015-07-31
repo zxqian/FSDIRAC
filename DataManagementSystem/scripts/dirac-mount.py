@@ -58,9 +58,9 @@ if __name__ == "main":
     args = Script.getPositionalArgs()
     if len( args ):
       arg = args[ 0 ]
-      aarg = os.path.abspath( arg )
-      if os.path.isdir(aarg):
-        if os.listdir(aarg):
+      mountDir = os.path.abspath( arg )
+      if os.path.isdir( mountDir ):
+        if os.listdir( mountDir ):
           print  "["+arg+"]"+" is not empty"
           Script.showHelp()
           DIRACexit( 0 )
@@ -75,9 +75,12 @@ if __name__ == "main":
 
     if not os.path.isdir( tmpDir ):
         os.makedirs( tmpDir )
+    if not os.path.isdir( mountDir ):
+        os.makedirs( mountDir )
 
-    diracFS = DiracFS( defaultSE = defaultSE,
-                       tmpDir = tmpDir,
+    diracFS = DiracFS( mountpoint = mountDir,
+                       defaultSE = defaultSE,
+                       tmpdir = tmpDir,
                        version = "%prog " + fuse.__version__,
                        usage = usage,
                        dash_s_do = 'setsingle' )
