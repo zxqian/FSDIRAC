@@ -306,6 +306,6 @@ if __name__ == '__main__':
 
 @atexit.register
 def goodbye():
-  import shutil
-  shutil.rmtree(tmpdir)
-  #os.rmdir(tmpdir)
+    import shutil
+    shutil.rmtree(tmpdir)
+    #os.rmdir(tmpdir)
