@@ -53,6 +53,6 @@ This simple file system is based on fuse, origine for private usage.
 
 ### Troubleshooting :
 
-* The execution time of command depends on the charge of DIRAC Storage Element, some commands as 'rm' et 'cp' can take long time. Sometime after copy file to DIRAC, 'ls' does not show correct listing immediately.
+* The execution time of command depends on the charge of DIRAC Storage Element, some commands as 'rm' et 'cp' can take long time. Sometime after copy file to DIRAC, command 'ls' does not show correct listing immediately.
 
 
