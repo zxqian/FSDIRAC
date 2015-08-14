@@ -8,7 +8,7 @@ This simple file system is based on fuse, origine for private usage.
 
 ### To allow user to mount diracfs on linux, two different methods can be used (both needs administration privilege):
 *  add user to fuse group
-*  do 'chmod o+x /bin/fusermount'
+*  insert 'user_allow_other' into /etc/fuse.conf and do 'chmod o+x /bin/fusermount'
 
 ### User mount/umount diracfs :
 * mount (ex. mount to /tmp/dfs)
@@ -50,3 +50,9 @@ This simple file system is based on fuse, origine for private usage.
          copy to remote path and delete local copy (fuse/fuse-python bug?)  
        - cannot overwrite existing file in same directory : dirac GUID ?
 ```
+
+### Troubleshooting :
+
+* The execution time of command depends on the charge of DIRAC Storage Element, some commands as 'rm' et 'cp' can take long time. Sometime after copy file to DIRAC, command 'ls' does not show correct listing immediately.
+
+

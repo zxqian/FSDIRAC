@@ -1,36 +1,18 @@
 #! /usr/bin/env python
 #
-# Copyright (C) 2014  Xiabo LI
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-########################################################################
-# diracfs is a simple file system for manipulation of DIRAC SE contents,  
-# based on fuse, origine for private usage. 
-# Function details see readme & release note 
-#
-# Xiabo Li <li.xiabo@gmail.com>
-########################################################################
-  
-import stat, time, random, errno, os, fuse
-  
+import stat, time, random, errno, os, fuse, atexit
+from DIRAC.Core.Base import Script
+Script.initialize()
+
+#tmpdir = "/tmp/diracfs_"+os.environ['LOGNAME']
+tmpdir = os.path.expandvars( '$HOME/.diracfs' )
+
 class DiracFS(fuse.Fuse):
     def __init__(self, *args, **kw):
         fuse.fuse_python_api = (0, 2)
         fuse.Fuse.__init__(self, *args, **kw)
-        self.tmpDir = kw.get( "tmpDir" )
-        self.SE = kw.get( "defaultSE" )
+        self.tmpdir = tmpdir
+        self.SE = "DIRAC-USER"
         self.file = {}
         self.result = {}
         from DIRAC.Core.Security import ProxyInfo
@@ -144,11 +126,11 @@ class DiracFS(fuse.Fuse):
         from COMDIRAC.Interfaces import DCatalog
         fcc = FileCatalogClientCLI( DCatalog().catalog )
         tmp = str(time.time())+str(random.random())
-        f = open(self.        tmpDir+'/'+tmp, 'w+b')
+        f = open(self.tmpdir+'/'+tmp, 'w+b')
         f.write("\0")
         f.close()
-        fcc.do_add( path+" "+self.        tmpDir+"/"+tmp+" "+self.SE )
-        os.remove(self.        tmpDir+'/'+tmp)
+        fcc.do_add( path+" "+self.tmpdir+"/"+tmp+" "+self.SE )
+        os.remove(self.tmpdir+'/'+tmp)
         self.file[path] = {"handler":os.tmpfile(),"modified":False}#,"mode":os.stat(path)[stat.ST_MODE]}
         self.file[path]["handler"].write("\0")
         return 0
@@ -156,7 +138,7 @@ class DiracFS(fuse.Fuse):
     def open ( self, path, flags ):
         print '*** open', path, flags
         from DIRAC.DataManagementSystem.Client.DataManager import DataManager
-        result = DataManager().getFile( path, destinationDir = self.        tmpDir )
+        result = DataManager().getFile( path, destinationDir = self.tmpdir )
         if result["OK"]:
             self.file[path] = {"handler":os.tmpfile(),"modified":False}#,"mode":os.stat(path)[stat.ST_MODE]}
             self.file[path]["handler"].write(open(result["Value"]["Successful"][path],'rb').read())
@@ -185,17 +167,17 @@ class DiracFS(fuse.Fuse):
             off = 1 if self.file[path]["handler"].read(1) == '\0' else 0
 
             tmp = str(time.time())+str(random.random())
-            f = open(self.        tmpDir+'/'+tmp,"w+b")
+            f = open(self.tmpdir+'/'+tmp,"w+b")
             self.file[path]["handler"].seek(off)
             f.write(self.file[path]["handler"].read())
             f.close()
-            
+    
             from DIRAC.DataManagementSystem.Client.FileCatalogClientCLI import FileCatalogClientCLI
             from COMDIRAC.Interfaces import DCatalog
             fcc = FileCatalogClientCLI( DCatalog().catalog )
             fcc.do_rm(path)
-            fcc.do_add( path+" "+self.        tmpDir+"/"+tmp+" "+self.SE )
-            os.remove(self.        tmpDir+'/'+tmp)
+            fcc.do_add( path+" "+self.tmpdir+"/"+tmp+" "+self.SE )
+            os.remove(self.tmpdir+'/'+tmp)
         self.file[path]["handler"].close()
         del self.file[path]
         return 0
@@ -208,32 +190,38 @@ class DiracFS(fuse.Fuse):
         #from DIRAC.DataManagementSystem.Client.FileCatalogClientCLI import FileCatalogClientCLI
         #from COMDIRAC.Interfaces import DCatalog
         #fcc = FileCatalogClientCLI( DCatalog().catalog )
-        #result = ReplicaManager().getFile( oldPath, destinationDir = self.        tmpDir )
+        #result = ReplicaManager().getFile( oldPath, destinationDir = self.tmpdir )
         #fcc.do_rm(oldPath)
-        #fcc.do_add( newPath+" "+self.        tmpDir+"/"+oldPath.split('/')[-1]+" "+self.SE )
-        #os.remove(self.        tmpDir+'/'+oldPath.split('/')[-1])
+        #fcc.do_add( newPath+" "+self.tmpdir+"/"+oldPath.split('/')[-1]+" "+self.SE )
+        #os.remove(self.tmpdir+'/'+oldPath.split('/')[-1])
 
         #import shutil
         #tmp = str(time.time())+str(random.random())
-        #os.mkdir(self.        tmpDir+"/"+tmp)
-        #shutil.rename(oldPath, self.        tmpDir+"/"+tmp)
+        #os.mkdir(self.tmpdir+"/"+tmp)
+        #shutil.rename(oldPath, self.tmpdir+"/"+tmp)
         #dstdir =  os.path.join(newPath, os.path.dirname(oldPath))
         #os.makedirs(dstdir)
         #shutil.copytree(oldPath, newPath)
         #shutil.rmtree(oldPath)
         #os.rmdir(oldPath)
         #time.sleep(5)
-        #os.rename(oldPath, self.        tmpDir+"/"+oldPath)
-        #os.rename(self.        tmpDir+"/"+oldPath, newPath)
-        #os.rmdir(self.        tmpDir+"/"+oldPath)
+        #os.rename(oldPath, self.tmpdir+"/"+oldPath)
+        #os.rename(self.tmpdir+"/"+oldPath, newPath)
+        #os.rmdir(self.tmpdir+"/"+oldPath)
         #return 0
 
     def rmdir ( self, path ):
         print '*** rmdir', path
-        from DIRAC.DataManagementSystem.Client.FileCatalogClientCLI import FileCatalogClientCLI
-        from COMDIRAC.Interfaces import DCatalog
-        FileCatalogClientCLI( DCatalog().catalog ).do_rmdir(path)
-        return 0
+        from DIRAC.Resources.Catalog.FileCatalogClient import FileCatalogClient
+        result = FileCatalogClient().listDirectory(path)
+        flist = result['Value']['Successful'][path]['Files'].keys()
+        if not flist:
+            from DIRAC.DataManagementSystem.Client.FileCatalogClientCLI import FileCatalogClientCLI
+            from COMDIRAC.Interfaces import DCatalog
+            FileCatalogClientCLI( DCatalog().catalog ).do_rmdir(path)
+            return 0
+        else:
+            return -errno.ENOTEMPTY
 
     def statfs ( self ):
         print '*** statfs'
@@ -274,3 +262,33 @@ class DiracFS(fuse.Fuse):
         self.file[path]["handler"].write(buf)
         self.file[path]["modified"] = True
         return len(buf)
+
+    #def access(self, path, mode):
+    #    if not os.access(path, mode):
+    #        return -errno.EACCES
+
+
+def main(args):
+    usage="""
+        DiracFS: A filesystem to allow viewing dirac cloud filesystem.
+    """ + fuse.Fuse.fusage
+    if not os.path.isdir(tmpdir):
+        os.makedirs(tmpdir)
+    server = DiracFS(version="%prog " + fuse.__version__,
+                    usage=usage, dash_s_do='setsingle')
+    #server.fuse_args.add('allow_other')
+    server.parser.add_option(mountopt="SE", metavar="Storage Element ID", default="DIRAC-USER", help="specify the used storage element [default: %default]")
+    server.parse(values = server,errex=1)
+#    server.parse(errex=1)
+    server.main()
+
+if __name__ == '__main__':
+    import sys
+    main(sys.argv)
+
+
+@atexit.register
+def goodbye():
+    import shutil
+    shutil.rmtree(tmpdir)
+    #os.rmdir(tmpdir)

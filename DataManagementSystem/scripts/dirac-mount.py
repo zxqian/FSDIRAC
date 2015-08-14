@@ -5,23 +5,15 @@ dirac-mount command to mount DIRAC FS
 """
 
 import os
-import atexit
 
 from DIRAC.Core.Base import Script
 from DIRAC import S_OK
 
-defaultSE = "DIRAC-USER"
+defaultSE = ""
 def setDefaultSE( value ):
-  global defaultSE
-  defaultSE = value
-  return S_OK()
-
-tmpDir = os.path.expandvars( '$HOME/.diracfs' )
-def setTmpDir( value ):
-  global tmpDir
-  tmpDir = value
-  return S_OK()
-
+    global defaultSE
+    defaultSE = value
+    return S_OK()
 
 Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                                      'Usage:',
@@ -36,60 +28,41 @@ Script.setUsageMessage( '\n'.join( [ __doc__.split( '\n' )[1],
                         )
 
 Script.registerSwitch( "S:", "se=", "Default Storage Element", setDefaultSE )
-Script.registerSwitch( "T:", "tmpdir=", "Directory to hold the local cache", setTmpDir )
-
 Script.parseCommandLine( ignoreErrors = True )
 
-@atexit.register
-def goodbye():
-  #os.rmdir(        tmpDir)
-  import shutil
-  shutil.rmtree( tmpDir )
+from DIRAC import exit as DIRACexit
 
-usage = """
-dirac-mount -T <cache_directory> <mount_point>
-"""
-
-if __name__ == "main":
-
-    from FSDIRAC.DataManagementSystem.private.DiracFS import DiracFS
-    from DIRAC import exit as DIRACexit
-
-    args = Script.getPositionalArgs()
-    if len( args ):
-      arg = args[ 0 ]
-      mountDir = os.path.abspath( arg )
-      if os.path.isdir( mountDir ):
-        if os.listdir( mountDir ):
-          print  "["+arg+"]"+" is not empty"
-          Script.showHelp()
-          DIRACexit( 0 )
-      else:
+args = Script.getPositionalArgs()
+if len( args ):
+    arg = args[ 0 ]
+    aarg = os.path.abspath( arg )
+    if os.path.isdir(aarg):
+        if os.listdir(aarg):
+            print  "["+arg+"]"+" is not empty"
+            Script.showHelp()
+            DIRAC.exit( 0 )
+    else:
         print "["+arg+"]"+" is not a valid directory"
         Script.showHelp()
-        DIRACexit( 0 )
-    else:
-      print "no mount point"
-      Script.showHelp()
-      DIRACexit( 0 )
+        DIRAC.exit( 0 )
+else:
+    print "no mount point"
+    Script.showHelp()
+    DIRAC.exit( 0 )
 
-    if not os.path.isdir( tmpDir ):
-        os.makedirs( tmpDir )
-    if not os.path.isdir( mountDir ):
-        os.makedirs( mountDir )
+# call DiracFS.py
 
-    diracFS = DiracFS( mountpoint = mountDir,
-                       defaultSE = defaultSE,
-                       tmpdir = tmpDir,
-                       version = "%prog " + fuse.__version__,
-                       usage = usage,
-                       dash_s_do = 'setsingle' )
-
-    diracFS.parser.add_option( mountopt = "SE",
-                               metavar = "Storage Element ID",
-                               default = "DIRAC-USER",
-                               help = "specify the used storage element [default: %default]")
-    diracFS.parse( values = diracFS, errex = 1 )
-    diracFS.main()
-
+import sys
+import DiracFS
+if defaultSE:
+    for i, item in enumerate(sys.argv):
+        if not item.find("--se="):
+            sys.argv.pop(i)
+            sys.argv.append("-o") 
+            sys.argv.append("SE=" + defaultSE) 
+            break
+        elif not item.find("--se") or not item.find("-S"):
+            sys.argv[i] = "-o"
+            sys.argv[i+1] = "SE=" + defaultSE
+DiracFS.main(sys.argv)
 
