@@ -46,9 +46,8 @@ This simple file system is based on fuse, origine for private usage.
   vi(vim, gvim) : work although better to set swap file/directory to local 
                   path  
   emacs : work as vi
-  mv : - globaly works for files, for directory better to copy to local then  
-         copy to remote path and delete local copy (fuse/fuse-python bug?)  
-       - cannot overwrite existing file in same directory : dirac GUID ?
+  mv : dirac FileCatalogue does not support move procedure. Can be done 
+       by copy to local then send back to remote dirac SE 
 ```
 
 ### Troubleshooting :
