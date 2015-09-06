@@ -2,10 +2,6 @@
 This is a project to add a file system functionality to DIRAC to access grid files as if they are local.<p>
 This simple file system is based on fuse, origine for private usage.
 
-### Environment requirement :
-*  python : 2.6, 2.7
-*  fuse installed : install python fuse (linux fuse.py; mac OSXFUSE & fuse.py) manually
-
 ### To allow user to mount diracfs on linux, two different methods can be used (both needs administration privilege):
 *  add user to fuse group
 *  insert 'user_allow_other' into /etc/fuse.conf and do 'chmod o+x /bin/fusermount'
