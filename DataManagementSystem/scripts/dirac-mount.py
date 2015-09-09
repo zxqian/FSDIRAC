@@ -53,7 +53,7 @@ else:
 # call DiracFS.py
 
 import sys
-import DiracFS
+from FSDIRAC.DataManagementSystem.private import DiracFS
 if defaultSE:
     for i, item in enumerate(sys.argv):
         if not item.find("--se="):
